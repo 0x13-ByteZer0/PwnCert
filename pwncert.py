@@ -114,6 +114,19 @@ class PwnCert:
         cmd_display = []
         for item in full_cmd:
             if ' ' in item or any(c in item for c in ['@', '!', '#', '$', '&', ';', '|', '>', '<']):
+                cmd_display.append(f"'{item}'")
+            else:
+                cmd_display.append(item)
+        
+        if self.debug:
+            print(f"\n[DEBUG] Executando: {' '.join(cmd_display)}")
+        
+        try:
+            result = subprocess.run(full_cmd, capture_output=False, text=True)
+            return result.returncode
+        except Exception as e:
+            print(f"[!] Erro ao executar comando: {str(e)}")
+            return 1
     
     def find(self, output: str = None, vulnerable: bool = False, 
              enabled: bool = False, stdout: bool = False, json: bool = False) -> int:
