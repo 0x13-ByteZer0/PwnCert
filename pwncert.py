@@ -10,6 +10,50 @@ import argparse
 import sys
 import os
 from typing import List
+import shutil
+
+def update_from_git():
+    """Atualiza a ferramenta direto do repositório Git"""
+    try:
+        print("[*] Atualizando PwnCert do repositório Git...")
+        
+        # Verifica se está em um repositório git
+        result = subprocess.run(
+            ['git', 'rev-parse', '--git-dir'],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0:
+            print("[!] Erro: Não está em um repositório Git")
+            return False
+        
+        # Faz o fetch das mudanças
+        print("[*] Buscando mudanças do repositório remoto...")
+        subprocess.run(['git', 'fetch'], check=True)
+        
+        # Faz o rebase/merge com a branch atual
+        print("[*] Aplicando atualizações...")
+        result = subprocess.run(
+            ['git', 'pull', '--rebase'],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode == 0:
+            print("[+] PwnCert atualizado com sucesso!")
+            print("[*] Reinicie a ferramenta para usar a versão atualizada.")
+            return True
+        else:
+            print("[!] Erro ao atualizar: {}".format(result.stderr))
+            return False
+            
+    except FileNotFoundError:
+        print("[!] Erro: Git não está instalado. Instale o Git para usar esta funcionalidade.")
+        return False
+    except Exception as e:
+        print("[!] Erro ao atualizar: {}".format(str(e)))
+        return False
 
 def print_banner():
     """Exibe o banner da ferramenta"""
@@ -221,12 +265,13 @@ Notas:
     )
     
     # Argumentos globais
-    parser.add_argument('-u', '--username', required=True, help='Username')
+    parser.add_argument('-u', '--username', required=False, help='Username')
     parser.add_argument('-p', '--password', help='Password')
     parser.add_argument('-H', '--hashes', help='NTLM hashes (LM:NT)')
-    parser.add_argument('-d', '--domain', required=True, help='Domain')
+    parser.add_argument('-d', '--domain', required=False, help='Domain')
     parser.add_argument('--dc-ip', help='IP do Domain Controller')
     parser.add_argument('--debug', action='store_true', help='Debug mode')
+    parser.add_argument('--update', action='store_true', help='Atualizar a ferramenta direto do Git')
     
     # Subcomandos
     subparsers = parser.add_subparsers(dest='command', help='Comando a executar')
@@ -294,6 +339,17 @@ Notas:
     workflow_parser.add_argument('-o', '--output', default='certipy_results', help='Diretório de saída')
     
     args = parser.parse_args()
+    
+    # Verifica se foi solicitada atualização
+    if args.update:
+        return 0 if update_from_git() else 1
+    
+    # Validar argumentos obrigatórios para comandos normais
+    if not args.username or not args.domain:
+        print("\n[!] Erro: -u/--username e -d/--domain são obrigatórios")
+        print("[*] Use --update para atualizar a ferramenta sem precisar destes argumentos")
+        parser.print_help()
+        return 1
     
     if not args.command:
         parser.print_help()
@@ -423,10 +479,7 @@ Notas:
 
 
 if __name__ == '__main__':
-    sys.exit(main()), '%', '^', '&', '*']):
-                cmd_display.append(f"'{item}'")
-            else:
-                cmd_display.append(item)
+    sys.exit(main())
         
         print(f"\n[*] Executando: {' '.join(cmd_display)}")
         print("=" * 80)
