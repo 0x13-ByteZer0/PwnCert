@@ -28,7 +28,7 @@ def print_banner():
 ║                                                               ║
 ║   [+] Powered by Certipy-AD                                  ║
 ║   [+] ESC1-ESC16 Support                                     ║
-║   [+] Author: Your Security Team                             ║
+║   [+] Author: 0x13-ByteZer0                             ║
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
     """
