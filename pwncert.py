@@ -59,23 +59,18 @@ def update_from_git():
 def print_banner():
     """Exibe o banner da ferramenta"""
     banner = """
-╔═══════════════════════════════════════════════════════════════╗
-║                                                               ║
-║   ██████╗ ██╗    ██╗███╗   ██╗ ██████╗███████╗██████╗ ████████╗
-║   ██╔══██╗██║    ██║████╗  ██║██╔════╝██╔════╝██╔══██╗╚══██╔══╝
-║   ██████╔╝██║ █╗ ██║██╔██╗ ██║██║     █████╗  ██████╔╝   ██║   
-║   ██╔═══╝ ██║███╗██║██║╚██╗██║██║     ██╔══╝  ██╔══██╗   ██║   
-║   ██║     ╚███╔███╔╝██║ ╚████║╚██████╗███████╗██║  ██║   ██║   
-║   ╚═╝      ╚══╝╚══╝ ╚═╝  ╚═══╝ ╚═════╝╚══════╝╚═╝  ╚═╝   ╚═╝   
-║                                                               ║
-║              Active Directory Certificate Services            ║
-║                    Exploitation Automation                    ║
-║                                                               ║
-║   [+] Powered by Certipy-AD                                  ║
-║   [+] ESC1-ESC16 Support                                     ║
-║   [+] Author: 0x13-ByteZer0                                  ║
-║                                                               ║
-╚═══════════════════════════════════════════════════════════════╝
+====================================================================
+                                                                    
+   PwnCert - Certipy-AD Automation Tool                            
+                                                                    
+   Active Directory Certificate Services                           
+   Exploitation Automation                                         
+                                                                    
+   [+] Powered by Certipy-AD                                       
+   [+] ESC1-ESC16 Support                                          
+   [+] Author: 0x13-ByteZer0                                       
+                                                                    
+====================================================================
     """
     print(banner)
 
@@ -280,9 +275,9 @@ Notas:
     
     # Argumentos globais
     parser.add_argument('-u', '--username', required=False, help='Username')
-    parser.add_argument('-p', '--password', help='Password')
+    parser.add_argument('-p', '--password', required=False, help='Password')
     parser.add_argument('-H', '--hashes', help='NTLM hashes (LM:NT)')
-    parser.add_argument('-d', '--domain', required=False, help='Domain')
+    parser.add_argument('-d', '--domain', required=False, dest='domain', help='Domain')
     parser.add_argument('--dc-ip', help='IP do Domain Controller')
     parser.add_argument('--debug', action='store_true', help='Debug mode')
     parser.add_argument('--update', action='store_true', help='Atualizar a ferramenta direto do Git')
@@ -358,14 +353,14 @@ Notas:
     if args.update:
         return 0 if update_from_git() else 1
     
+    if not args.command:
+        parser.print_help()
+        return 1
+    
     # Validar argumentos obrigatórios para comandos normais
     if not args.username or not args.domain:
         print("\n[!] Erro: -u/--username e -d/--domain são obrigatórios")
         print("[*] Use --update para atualizar a ferramenta sem precisar destes argumentos")
-        parser.print_help()
-        return 1
-    
-    if not args.command:
         parser.print_help()
         return 1
     
