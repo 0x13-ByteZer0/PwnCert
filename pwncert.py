@@ -69,7 +69,7 @@ class PwnCert:
         # Mostra o comando de forma legível
         cmd_display = []
         for item in full_cmd:
-            if ' ' in item or any(c in item for c in ['@', '!', '#', '
+            if ' ' in item or any(c in item for c in ['@', '!', '#', '$', '&', ';', '|', '>', '<']):
     
     def find(self, output: str = None, vulnerable: bool = False, 
              enabled: bool = False, stdout: bool = False, json: bool = False) -> int:
