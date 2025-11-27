@@ -886,11 +886,57 @@ def main():
     
     # Auto - Exploração automática com NetExec
     auto_parser = subparsers.add_parser('auto', help='Exploração TOTALMENTE AUTOMÁTICA (NetExec + Certipy)')
-    auto_parser.add_argument('target', help='IP ou hostname do Domain Controller/LDAP')
+    auto_parser.add_argument('target', nargs='?', help='IP ou hostname do Domain Controller/LDAP')
     auto_parser.add_argument('--target-user', dest='target_user', default='Administrator', help='Usuário alvo (padrão: Administrator)')
     auto_parser.add_argument('--log', help='Arquivo para salvar log')
     
-    args = parser.parse_args()
+    # Parse inicial - pode haver argumentos globais após o subcomando
+    args, remaining = parser.parse_known_args()
+    
+    # Se há argumentos restantes e o comando é 'auto', tenta reparsar reorganizando argumentos
+    if remaining and args.command == 'auto':
+        # Argumentos globais conhecidos
+        global_arg_names = {'-u', '--username', '-p', '--password', '-H', '--hashes', '-d', '--domain', '--dc-ip', '--debug', '--update'}
+        
+        # Reconstrói sys.argv movendo argumentos globais para antes do comando
+        auto_idx = next((i for i, x in enumerate(sys.argv) if x == 'auto'), -1)
+        if auto_idx == -1:
+            args = parser.parse_args()
+        else:
+            new_argv = [sys.argv[0]]
+            args_before_auto = sys.argv[1:auto_idx]
+            args_after_auto = sys.argv[auto_idx+1:]
+            
+            # Separa argumentos globais dos argumentos específicos do subcomando
+            global_args_found = []
+            subcommand_args = []
+            i = 0
+            while i < len(args_after_auto):
+                arg = args_after_auto[i]
+                if arg in global_arg_names:
+                    global_args_found.append(arg)
+                    # Se o argumento espera um valor (não é flag booleana)
+                    if arg not in ['--debug', '--update']:
+                        if i+1 < len(args_after_auto):
+                            global_args_found.append(args_after_auto[i+1])
+                            i += 1
+                    i += 1
+                else:
+                    subcommand_args.append(arg)
+                    i += 1
+            
+            # Reconstrói: args antes + args globais encontrados depois + auto + args do subcomando
+            new_argv.extend(args_before_auto)
+            new_argv.extend(global_args_found)
+            new_argv.append('auto')
+            new_argv.extend(subcommand_args)
+            
+            if args.debug:
+                print(f"[DEBUG] Reorganizado: {' '.join(new_argv)}")
+            
+            args = parser.parse_args(new_argv[1:])
+    else:
+        args = parser.parse_args()
     
     # Verifica se foi solicitada atualização
     if args.update:
@@ -903,7 +949,9 @@ def main():
     # Validar argumentos obrigatórios para comandos normais
     if not args.username or not args.domain:
         print("\n[!] Erro: -u/--username e -d/--domain são obrigatórios")
-        print("[*] Uso: python pwncert.py -u <username> -d <domain> [comando] [opções]")
+        print("[*] Uso:")
+        print("    python pwncert.py -u <username> -d <domain> [comando] [opções]")
+        print("    python pwncert.py [comando] -u <username> -d <domain> [opções]")
         print("[*] Use --update para atualizar a ferramenta sem precisar destes argumentos")
         print("[*] Use --help para ver todos os comandos disponíveis\n")
         return 1
