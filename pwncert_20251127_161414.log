@@ -1,2 +1,0 @@
-[2025-11-27 16:14:14] [INFO] Iniciando enumeração com NetExec em None
-[2025-11-27 16:14:14] [ERROR] Erro ao executar NetExec: expected str, bytes or os.PathLike object, not NoneType
