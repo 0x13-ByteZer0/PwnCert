@@ -359,10 +359,14 @@ class PwnCert:
         Returns:
             Lista de parâmetros de autenticação
         """
-        auth = ['-username', self.username, '-domain', self.domain]
+        auth = []
+        
+        # Certipy usa -u username@domain, não -username e -domain separados
+        if self.username and self.domain:
+            auth.extend(['-u', f'{self.username}@{self.domain}'])
         
         if self.password:
-            auth.extend(['-password', self.password])
+            auth.extend(['-p', self.password])
         elif self.hashes:
             auth.extend(['-hashes', self.hashes])
         
@@ -493,15 +497,16 @@ class PwnCert:
             
         cmd = ['auth', '-pfx', pfx]
         
+        # Adicionar credenciais se necessário (sem separar -u e domain)
         domain_to_use = domain or self.domain
-        cmd.extend(['-domain', domain_to_use])
+        username_to_use = username or self.username
+        
+        if username_to_use and domain_to_use:
+            cmd.extend(['-u', f'{username_to_use}@{domain_to_use}'])
         
         dc_ip_to_use = dc_ip or self.dc_ip
         if dc_ip_to_use:
             cmd.extend(['-dc-ip', dc_ip_to_use])
-        
-        if username:
-            cmd.extend(['-username', username])
         
         if kirbi:
             cmd.append('-kirbi')
@@ -810,7 +815,6 @@ def main():
     parser.add_argument('-p', '--password', required=False, help='Password')
     parser.add_argument('-H', '--hashes', help='NTLM hashes (LM:NT)')
     parser.add_argument('-d', '--domain', required=False, dest='domain', help='Domain')
-    parser.add_argument('-domain', dest='domain2', help=argparse.SUPPRESS)  # Suporte legado
     parser.add_argument('--dc-ip', help='IP do Domain Controller')
     parser.add_argument('--debug', action='store_true', help='Debug mode')
     parser.add_argument('--update', action='store_true', help='Atualizar a ferramenta direto do Git')
@@ -887,10 +891,6 @@ def main():
     auto_parser.add_argument('--log', help='Arquivo para salvar log')
     
     args = parser.parse_args()
-    
-    # Suporte legado: se -domain foi usado, mesclar com -d
-    if hasattr(args, 'domain2') and args.domain2:
-        args.domain = args.domain2
     
     # Verifica se foi solicitada atualização
     if args.update:
